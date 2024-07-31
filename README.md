@@ -1,5 +1,5 @@
 
-# Bidirectional Sync: Salesforce and Supabase
+# Bidirectional Sync: Salesforce to Database
 
 ## Overview
 
