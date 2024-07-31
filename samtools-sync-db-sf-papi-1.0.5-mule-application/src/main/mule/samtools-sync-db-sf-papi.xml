@@ -1,0 +1,534 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule
+	xmlns:sockets="http://www.mulesoft.org/schema/mule/sockets"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/sockets http://www.mulesoft.org/schema/mule/sockets/current/mule-sockets.xsd">
+	<db:config name="Database_Config" doc:name="Database Config"
+		doc:id="fabab2b3-1d19-4163-81a2-085a8382cdc2"
+		tracking:enable-default-events="false">
+		<db:generic-connection
+			url="jdbc:postgresql://aws-0-us-west-1.pooler.supabase.com:6543/postgres?user=postgres.jmyjateesrbvggvyrrpz&amp;password=KhDUznBGOicwEe3W"
+			driverClassName="org.postgresql.Driver"
+			user="postgres.jmyjateesrbvggvyrrpz" password="KhDUznBGOicwEe3W" />
+	</db:config>
+	<salesforce:sfdc-config name="Salesforce_Config"
+		doc:name="Salesforce Config"
+		doc:id="9393a68b-b299-4e8e-89a0-06bb34b05d23">
+		<salesforce:basic-connection
+			username="samintegration@mule.com" password="showT1me"
+			securityToken="kHb3G8wehDXlfDQ0JUTag1ka6"
+			url="https://login.salesforce.com/services/Soap/u/55.0" />
+	</salesforce:sfdc-config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="56382c8d-f8c0-45e7-9fbf-db2b4ce4378a" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="sync-users-sf-flow"
+		doc:id="1a71dc97-7d9f-43cb-a0f6-530f0ef77f13">
+		<http:listener doc:name="Listener" doc:id="4d87f258-3c6f-4796-9c80-7672363b3c64" config-ref="HTTP_Listener_config" path="/users"/>
+		<logger level="INFO" doc:name="Log info " doc:id="2b9a5be7-9dcf-4f79-a804-66ca068241a7" message='#[{&#10;	flow : flow.name,&#10;	timeStamp: now(),&#10;	message : "start of flow"&#10;}]' />
+		<choice doc:name="Choice"
+			doc:id="4bf79bd6-2b3c-49f5-a3e3-dc0eb2219fdc">
+			<when expression="#[!(payload.record.modifiedByMule)]">
+				<logger level="INFO" doc:name="Log payload" doc:id="a95dacb4-c4a5-48d9-8fa6-e5a7454b7668" message="#[payload]" />
+				<choice doc:name="Choice" doc:id="2d49b594-f59d-4bb7-b03c-03531a91afa9">
+					<when expression="#[((payload.record.isDeleted default false) as Boolean)]">
+						<salesforce:query doc:name="get record id of member" doc:id="f36fdec2-fd4a-48bb-82a5-c8adda58aa78" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query><![CDATA[SELECT Id
+FROM PensionMember__c
+WHERE MemberID__c= ':MemberID'
+]]></salesforce:salesforce-query>
+			<salesforce:parameters><![CDATA[#[output application/java
+---
+{
+	"MemberID" : payload.record.userid
+}]]]></salesforce:parameters>
+		</salesforce:query>
+						<salesforce:delete doc:name="delete record" doc:id="80f62077-dade-4864-992a-17b344c67419" config-ref="Salesforce_Config">
+							<salesforce:ids><![CDATA[#[payload.Id]]]></salesforce:ids>
+						</salesforce:delete>
+						<ee:transform doc:name="response payload" doc:id="24c71a02-8b7e-4bbc-8e57-6b19e542e858" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+
+	correlationID: correlationId,
+	"message": "Member deleted successfully"
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise>
+						<ee:transform doc:name="mapping data" doc:id="97557d58-bbb9-421b-a32a-a4cc856c8af0">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+[payload.record] map{
+    "MemberId__c": $.userid,
+    "FirstName__c": $.firstname,
+    "LastName__c": $.lastname,
+    "DateOfBirth__c": $.dateofbirth as Date,
+    "Email__c": $.email,
+    "PhoneNumber__c": $.phonenumber,
+    "ModifiedOn__c": now(),
+    "CreatedOn__c": now()
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+
+					</ee:variables>
+				</ee:transform>
+						<salesforce:upsert objectType="PensionMember__c" externalIdFieldName="MemberId__c" doc:name="Upsert pension member" doc:id="9d59145d-3f21-42f5-b489-807f9976c6a1" config-ref="Salesforce_Config">
+						</salesforce:upsert>
+						<ee:transform doc:name="response payload" doc:id="1de94aeb-e222-44a7-9af3-f5c8d1004ef0">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+ "success": payload.successful,
+ "transactionId": correlationId,
+ "payload": payload.items.payload
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+					</otherwise>
+				</choice>
+			
+</when>
+			<otherwise >
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;"No records to update"]' doc:name="Set message" doc:id="889b6d8d-c2e7-4311-a2ec-b8f906e0f413" />
+			</otherwise>
+		
+</choice>
+		<logger level="INFO" doc:name="Log payload" doc:id="0da4421a-dd0b-4eef-bcb6-7f8c70532b0f" message="#[payload]" />
+		<logger level="INFO" doc:name="Log info" doc:id="b62125e7-100e-4418-a21e-8d47afd54912" message='#[{&#10;	flow : flow.name,&#10;	timeStamp: now(),&#10;	message : "end of flow"&#10;}]' />
+	</flow>
+	<flow name="sync-pension-account-flow"
+		doc:id="f32e6946-c50f-488a-8add-ac34d737dbb5" initialState="started">
+		
+		<http:listener doc:name="Listener" doc:id="64b8e561-c230-4239-9bf2-84fedfd9cd7b" config-ref="HTTP_Listener_config" path="/pensionaccount"/>
+		<logger level="INFO" doc:name="Log info " doc:id="8770b285-c6fe-4a51-a2b1-4765de6c2f9b" message='#[{&#10;	flow : flow.name,&#10;	timeStamp: now(),&#10;	message : "start of flow"&#10;}]' />
+		<logger level="INFO" doc:name="Log payload" doc:id="16b832a7-dfcc-4509-a8d6-85b89fdc1a34" message="#[payload]" />
+		<choice doc:name="Choice"
+			doc:id="56eb6d33-72de-4b24-87a8-89944ae21ee9">
+			<when expression="#[!(payload.record.modifiedByMule)]">
+				<logger level="INFO" doc:name="Log payload" doc:id="d0b6d42b-d0f5-4edb-a11c-a9a11136984c" message="#[payload]" />
+				<choice doc:name="Choice" doc:id="c94d673b-e147-4755-a814-ecceec6d3e5e" >
+					<when expression="#[(payload.record.isDeleted as Boolean)]">
+						<salesforce:query doc:name="get record id of account" doc:id="9be74500-5ab8-4727-960e-75b93b9b7086" config-ref="Salesforce_Config">
+							<salesforce:salesforce-query ><![CDATA[SELECT Id
+FROM PensionAccount__c
+WHERE AccountID__c= ':AccountID']]></salesforce:salesforce-query>
+							<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	"AccountID" : payload.record.accountID
+}]]]></salesforce:parameters>
+						</salesforce:query>
+						<salesforce:delete doc:name="delete record" doc:id="d520d3d8-7ccd-476c-ad95-94a10df93118" config-ref="Salesforce_Config">
+							<salesforce:ids ><![CDATA[#[payload.Id]]]></salesforce:ids>
+						</salesforce:delete>
+						<ee:transform doc:name="response payload" doc:id="3cce2f24-3eeb-44e6-8a73-9ae942b7431c" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+
+	correlationID: correlationId,
+	"message": "Account deleted successfully"
+}]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+					</when>
+					<otherwise >
+						<ee:transform doc:name="mapping data" doc:id="75a9fe81-8fb9-4128-a123-e9838e515b90">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+[payload.record] map{
+    "AccountID__c": $.accountid,
+	"MemberID__r": {MemberID__c: $.userid},
+    "AccountType__c": $.accountType,
+    "Balance__c": $.balance,
+    "LastContributionDate__c": $.lastcontributiondate as Date,
+    "ModifiedOn__c": now(),
+    "CreatedOn__c": now()
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+						<salesforce:upsert objectType="PensionAccount__c" externalIdFieldName="AccountID__c" doc:name="Upsert pension account" doc:id="080a3f0d-3e60-4d83-8af3-e06cbf5bb3a5" config-ref="Salesforce_Config" />
+						<ee:transform doc:name="response payload" doc:id="4fde2089-db95-4c5e-bdfb-f0ccdf7466dc">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+ "success": payload.successful,
+ "transactionId": correlationId,
+ "payload": payload.items.payload
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					</otherwise>
+				</choice>
+
+			</when>
+			<otherwise >
+				<set-payload value='#[%dw 2.0&#10;output application/json&#10;---&#10;"No records to update"]' doc:name="Set message" doc:id="64eb99e2-bf4b-41db-b264-afa85da47e8e" />
+			</otherwise>
+
+		</choice>
+		<logger level="INFO" doc:name="Log payload" doc:id="1491077e-58e6-4b93-bb87-ea4762c7f573" message="#[payload]" />
+		<logger level="INFO" doc:name="Log info" doc:id="c028783a-1e9f-4816-ba50-62993d7c916e" message='#[{&#10;	flow : flow.name,&#10;	timeStamp: now(),&#10;	message : "end of flow"&#10;}]' />
+	</flow>
+	<flow name="sync-pension-accounts-flow"
+		doc:id="b93709f8-ff36-41e7-8983-e3a035967738" initialState="started">
+		<salesforce:modified-object-listener objectType="PensionAccount__c" doc:name="On Modified Object" doc:id="31ec2d17-2401-48b0-aeb5-2c867a2fc1f3" config-ref="Salesforce_Config">
+			<scheduling-strategy>
+				<fixed-frequency frequency="1" timeUnit="MINUTES" />
+			</scheduling-strategy>
+		</salesforce:modified-object-listener>
+		<logger level="INFO" doc:name="Log info " doc:id="9dd34d46-c114-4ade-96d3-1c2c59cc9e13" message='#[{&#10;	flow : flow.name,&#10;	timeStamp: now(),&#10;	message : "start of flow"&#10;}]' />
+		<choice doc:name="Choice" doc:id="dc1c844d-2c00-465f-b820-06c2dd958284" >
+			<when expression='#[(payload."LastModifiedById" != "005ak000006O9hpAAC")]'>
+				<ee:transform doc:name="payload" doc:id="331af6fe-8feb-46a2-8c95-8e87ef160cb5">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+				<flow-ref doc:name="get-member-by-id-sub-flow" doc:id="ebcff132-1a14-4fb0-81a3-06a05270a5a3" name="get-member-by-id-sub-flow" target="memberDetails" />
+				<ee:transform doc:name="PensionAccount mapping data" doc:id="9977c88b-8a21-4c19-b53b-37adbaa1a121">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="pensionAccMapping"><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "userID": vars.memberDetails."MemberId__c"[0],
+    "accountID": payload.AccountID__c,
+    "accountType": payload.AccountType__c,
+    "balance": payload.Balance__c,
+    "modifiedByMule": true,
+    "modifiedBySystem": false,
+    "isDeleted": payload.IsDeleted
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+				<db:select doc:name="Retrieve pensionAccount_ID" doc:id="680c52e0-7c7b-4183-ac07-7bc9e89ca491" config-ref="Database_Config">
+			<db:sql><![CDATA[Select accountID from pensionAccounts where accountID = :id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	id: payload.AccountID__c
+}]]]></db:input-parameters>
+		</db:select>
+				<choice doc:name="Check for pensionAccount_ID" doc:id="dd39eba3-8318-450d-b8a5-259bc6e8a18b">
+			<when expression="#[!isEmpty(payload)]">
+				<db:update doc:name="Update pensionAccount" doc:id="82aad631-ac1f-43f4-8909-9fb2d3c21459" config-ref="Database_Config">
+					<db:sql><![CDATA[UPDATE pensionaccounts SET accountType = :accountType, balance = :balance, 
+"modifiedByMule" = :modifiedByMule, "modifiedBySystem" = :modifiedBySystem 
+WHERE accountID = :accountID]]></db:sql>
+					<db:input-parameters><![CDATA[#[vars.pensionAccMapping]]]></db:input-parameters>
+				</db:update>
+				<logger level="INFO" doc:name="Log payload" doc:id="58bb1c3a-0d5b-4452-b6c0-44d3d3ddbbad" message="#[payload]" />
+						<ee:transform doc:name="Update pensionAccount Response" doc:id="2c2aab21-dec2-4ea6-b2ff-01a0d57bb05f">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+
+	correlationId: correlationId,
+	message: "PensionAccount Updated Successfully."
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<db:insert doc:name="Insert pensionAccount" doc:id="ee206fe1-ced3-461c-9c85-48d16cc2f048" config-ref="Database_Config">
+					<db:sql><![CDATA[INSERT INTO pensionAccounts (userID, accountID, accountType, balance, "modifiedByMule", "modifiedBySystem") VALUES
+(:userID, :accountID, :accountType, :balance, :modifiedByMule, :modifiedBySystem);]]></db:sql>
+					<db:input-parameters><![CDATA[#[vars.pensionAccMapping]]]></db:input-parameters>
+				</db:insert>
+				<ee:transform doc:name="Insert pensionAccount Response" doc:id="e74b3b2c-9883-4c69-8f37-18eeb00f4b6a">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+
+	correlationID: correlationId,
+	"message": "PensionAccount created successfully."
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Log skip record" doc:id="c4c3fb63-b487-459f-b3fd-694117fbe015" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Log info" doc:id="94df8a2d-956d-4c86-819d-bbe009d1195d" message='#[{&#10;	flow : flow.name,&#10;	timeStamp: now(),&#10;	message : "end of flow"&#10;}]' />
+	</flow>
+	<flow name="sync-pension-members-flow"
+		doc:id="d41dca21-5a2c-44ac-b23a-e40fd2f1da87" initialState="started">
+		<salesforce:modified-object-listener doc:name="On Modified Object" doc:id="d1bab099-e5be-41e5-bf61-1b42860eedf1" config-ref="Salesforce_Config" objectType="PensionMember__c">
+			<scheduling-strategy>
+				<fixed-frequency frequency="1" timeUnit="MINUTES" />
+			</scheduling-strategy>
+		</salesforce:modified-object-listener>
+		<logger level="INFO" doc:name="Log info " doc:id="a3c943b6-a259-4c5e-82d1-e4530610c524" message='#[{&#10;	flow : flow.name,&#10;	timeStamp: now(),&#10;	message : "start of flow"&#10;}]' />
+		<choice doc:name="Choice" doc:id="5b74df77-bd82-469f-b59a-abe1b5e4a43c" >
+			<when expression='#[(payload."LastModifiedById" != "005ak000006O9hpAAC")]'>
+				<ee:transform doc:name="Users mapping data" doc:id="052ea451-13d0-413e-8bba-70319543b6e6">
+			<ee:message />
+			<ee:variables>
+				<ee:set-variable variableName="userMapping"><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"userID": payload.MemberId__c,
+    "firstName": payload.FirstName__c,
+    "lastName": payload.LastName__c,
+    "dateOfBirth": payload.DateOfBirth__c,
+    "email": payload.Email__c,
+    "phoneNumber": payload.PhoneNumber__c,
+    "modifiedByMule": true,
+    "modifiedBySystem": false,
+    "isDeleted": payload.IsDeleted
+}]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+				<db:select doc:name="Retrieve userID" doc:id="831eef49-27e3-48e9-9a35-da171d24452c" config-ref="Database_Config">
+			<db:sql><![CDATA[Select userID from members where userID = :id]]></db:sql>
+			<db:input-parameters><![CDATA[#[{
+	id: payload.MemberId__c
+}]]]></db:input-parameters>
+		</db:select>
+				<choice doc:name="Check for userID" doc:id="4dac980a-978b-4383-a43c-2fa467adcf3a">
+			<when expression="#[!isEmpty(payload)]">
+				<db:update doc:name="Update Users" doc:id="a215530f-c0fa-437e-918f-0f4d3cdaac9f" config-ref="Database_Config">
+					<db:sql><![CDATA[UPDATE members SET firstName = :firstName, lastName = :lastName, dateOfBirth = :dateOfBirth,
+email = :email, phoneNumber = :phoneNumber, "modifiedByMule" = :modifiedByMule, "modifiedBySystem" = :modifiedBySystem WHERE userID = :userID]]></db:sql>
+					<db:input-parameters><![CDATA[#[vars.userMapping]]]></db:input-parameters>
+				</db:update>
+				<ee:transform doc:name="Update user Response" doc:id="444e4418-90b0-4954-8af2-3947a47d92e0">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	correlationId: correlationId,
+	message: "User Updated Successfully."
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise>
+				<db:insert doc:name="Create pensionAccount" doc:id="f0697b79-1e37-4906-89a1-f74d788a730f" config-ref="Database_Config">
+					<db:sql><![CDATA[INSERT INTO members (userID, firstName, lastName, dateOfBirth, email, phoneNumber, "modifiedByMule", "modifiedBySystem") VALUES
+(:userID, :firstName, :lastName, :dateOfBirth, :email, :phoneNumber, :modifiedByMule, :modifiedBySystem);]]></db:sql>
+					<db:input-parameters><![CDATA[#[vars.userMapping]]]></db:input-parameters>
+				</db:insert>
+				<ee:transform doc:name="Insert user response" doc:id="a3019601-4d66-4dc8-9dea-de1f2a110197">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+
+	correlationID: correlationId,
+	"message": "userID created successfully."
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Log skip record" doc:id="878e1c4c-d7c7-4799-ab99-f05f19ee7e44" />
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Log payload" doc:id="9fb41c71-f69d-4119-ba4b-1f903f2ebd75" message="#[payload]" />
+		<logger level="INFO" doc:name="Log info" doc:id="6cb7f43a-ebd7-49a9-bdd9-3705d84c7c52" message='#[{&#10;	flow : flow.name,&#10;	timeStamp: now(),&#10;	message : "end of flow"&#10;}]' />
+	</flow>
+	<flow name="sync-case-db-flow" doc:id="e25ca9cf-2a94-4535-a2e6-850566215e44" >
+		<logger level="INFO" doc:name="Start Flow" doc:id="04e14eff-f522-4f2c-bea2-54bf373c63a7" message="Flow Started in #[flow.name] CorrelationId: #[correlationId] Time: #[now()]" />
+		<ee:transform doc:name="Set payload as  caseMapping" doc:id="ff035ffd-6e07-49d6-b4cf-e4ab0b23cb20">
+			<ee:message>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="caseMapping" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<db:select doc:name="Retrieve By RecordID" doc:id="ead39347-e811-40aa-8e67-ab5b27ed72ed" config-ref="Database_Config">
+			<db:sql ><![CDATA[select recordId from cases where recordId = :recordId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	recordId: payload.recordId
+}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Check for Record ID" doc:id="942b2e40-d1b1-41f3-96dd-77059e42c5ba" >
+			<when expression="#[!isEmpty(payload)]">
+				<ee:transform doc:name="Map Update Cases" doc:id="b79ad5bf-77fc-4dd7-91fe-31f57ef913fd">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output text/plain
+---
+"UPDATE Cases
+SET" ++
+(if(!isEmpty(vars.caseMapping.CaseNumber)) (" caseNumber = '" ++ vars.caseMapping.CaseNumber ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.AccountId)) (" accountId = '" ++ vars.caseMapping.AccountId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.AssetId)) (" assetId = '" ++ vars.caseMapping.AssetId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.SourceId)) (" sourceId = '" ++ vars.caseMapping.SourceId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.Reason)) (" reason = '" ++ vars.caseMapping.Reason ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.OwnerId)) (" ownerId = '" ++ vars.caseMapping.OwnerId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ContactMobile)) (" contactMobile = '" ++ vars.caseMapping.ContactMobile ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ContactEmail)) (" contactEmail = '" ++ vars.caseMapping.ContactEmail ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ContactId)) (" contactId = '" ++ vars.caseMapping.ContactId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ContactPhone)) (" contactPhone = '" ++ vars.caseMapping.ContactPhone ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.CreatedById)) (" createdById = '" ++ vars.caseMapping.CreatedById ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ClosedDate)) (" closedDate = '" ++ vars.caseMapping.ClosedDate ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.Description)) (" description = '" ++ vars.caseMapping.Description ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.LastModifiedById)) (" lastModifiedById = '" ++ vars.caseMapping.LastModifiedById ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ParentId)) (" parentId = '" ++ vars.caseMapping.ParentId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.Product__c)) (" product__c = '" ++ vars.caseMapping.Product__c ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ProductId)) (" productId = '" ++ vars.caseMapping.ProductId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.Status)) (" status = '" ++ vars.caseMapping.Status ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.StopStartDate)) (" stopStartDate = '" ++ vars.caseMapping.StopStartDate ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ServiceContractId)) (" serviceContractId = '" ++ vars.caseMapping.ServiceContractId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping."type")) (" type = '" ++ vars.caseMapping."type" ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.SuppliedCompany)) (" suppliedCompany = '" ++ vars.caseMapping.SuppliedCompany ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.SuppliedPhone)) (" suppliedPhone = '" ++ vars.caseMapping.SuppliedPhone ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.SuppliedName)) (" suppliedName = '" ++ vars.caseMapping.SuppliedName ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.SuppliedEmail)) (" suppliedEmail = '" ++ vars.caseMapping.SuppliedEmail ++ "'") else "" ) ++ "
+WHERE
+    recordID = '" ++ vars.caseMapping.recordId ++ "' ;"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<db:update doc:name="Update case" doc:id="198e7bc1-b268-4351-8af0-52959825c0c0" config-ref="Database_Config">
+					<db:sql ><![CDATA[#[payload]]]></db:sql>
+				</db:update>
+				<ee:transform doc:name="Update Response" doc:id="d30e6371-e203-454c-b81b-20300791debc">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	correlationId: correlationId,
+	message: "Case Updated Successfully."
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<ee:transform doc:name="Map Insert Cases" doc:id="11d3e295-6057-4fa1-99e6-1ba236b789a6">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output text/plain
+---
+"INSERT INTO Cases ( recordid, caseNumber, accountId, assetId, sourceId, reason, ownerId, contactMobile, contactEmail, contactId, contactPhone, createdById, closedDate, description, lastModifiedById, parentId, product__c, productId, status, stopStartDate, serviceContractId, type, suppliedCompany, suppliedPhone, suppliedName, suppliedEmail ) VALUES ("++
+(if(!isEmpty(vars.caseMapping.recordId)) ("'" ++ vars.caseMapping.recordId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.CaseNumber)) ("'" ++ vars.caseMapping.CaseNumber ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.AccountId)) ("'" ++ vars.caseMapping.AccountId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.AssetId)) ("'" ++ vars.caseMapping.AssetId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.SourceId)) ("'" ++ vars.caseMapping.SourceId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.Reason)) ("'" ++ vars.caseMapping.Reason ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.OwnerId)) ("'" ++ vars.caseMapping.OwnerId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ContactMobile)) ("'" ++ vars.caseMapping.ContactMobile ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ContactEmail)) ("'" ++ vars.caseMapping.ContactEmail ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ContactId)) ("'" ++ vars.caseMapping.ContactId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ContactPhone)) ("'" ++ vars.caseMapping.ContactPhone ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.CreatedById)) ("'" ++ vars.caseMapping.CreatedById ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ClosedDate)) ("'" ++ vars.caseMapping.ClosedDate ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.Description)) ("'" ++ vars.caseMapping.Description ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.LastModifiedById)) ("'" ++ vars.caseMapping.LastModifiedById ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ParentId)) ("'" ++ vars.caseMapping.ParentId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.Product__c)) ("'" ++ vars.caseMapping.Product__c ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ProductId)) ("'" ++ vars.caseMapping.ProductId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.Status)) ("'" ++ vars.caseMapping.Status ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.StopStartDate)) ("'" ++ vars.caseMapping.StopStartDate ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.ServiceContractId)) ("'" ++ vars.caseMapping.ServiceContractId ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping."type")) ("'" ++ vars.caseMapping."type" ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.SuppliedCompany)) ("'" ++ vars.caseMapping.SuppliedCompany ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.SuppliedPhone)) ("'" ++ vars.caseMapping.SuppliedPhone ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.SuppliedName)) ("'" ++ vars.caseMapping.SuppliedName ++ "',") else "" ) ++
+(if(!isEmpty(vars.caseMapping.SuppliedEmail)) ("'" ++ vars.caseMapping.SuppliedEmail ++ "'") else "" ) ++ ")"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<db:insert doc:name="Insert case" doc:id="052a806d-989c-42c3-8d76-41f0ef9b4e73" config-ref="Database_Config">
+					<db:sql ><![CDATA[#[payload]]]></db:sql>
+				</db:insert>
+				<ee:transform doc:name="Insert Response" doc:id="8e5e9424-dd1a-411e-a11d-3b119fd1d686">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	correlationId: correlationId,
+	message: "case Inserted Successfully."
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="End Flow" doc:id="7da8bdd5-66d4-4d2b-839c-27ce10a2b5d7" message="Flow Ended in #[flow.name] CorrelationId: #[correlationId] Time: #[now()]" />
+	</flow>
+	<flow name="get-member-by-id-sub-flow" doc:id="846cf915-f44c-4971-a1ba-0ed5c8bfc70f">
+		<salesforce:query doc:name="get member by id" doc:id="2890c700-b5de-4776-9b67-9372f7d01e34" config-ref="Salesforce_Config">
+			<salesforce:salesforce-query><![CDATA[SELECT MemberID__c
+FROM PensionMember__c
+WHERE Id= ':MemberID']]></salesforce:salesforce-query>
+			<salesforce:parameters><![CDATA[#[output application/java
+---
+{
+	"MemberID" : payload."MemberID__c" default "1232"
+}]]]></salesforce:parameters>
+		</salesforce:query>
+		<ee:transform doc:name="payload" doc:id="9443ea53-0bd1-4e30-920b-03914fed5eac">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+			<flow name="sync-case-replay-channel" doc:id="fd49d46e-ac6c-4824-9abc-054bf6d35e64" initialState="started" >
+		<salesforce:replay-channel-listener streamingChannel="/data/CaseChangeEvent" replayOption="FROM_LAST_REPLAY_ID" doc:name="Replay channel listener" doc:id="a0487f1f-5764-4499-aae9-40d6850efc37" config-ref="Salesforce_Config" cacheEventsInMemory="true"/>
+		<ee:transform doc:name="payload" doc:id="5568486c-2d38-4654-99eb-5dd1c1dbf7f5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+var recordId = payload.data.payload.ChangeEventHeader.recordIds[0] 
+var fields = payload.data.payload.ChangeEventHeader.changedFields
+var data = payload.data.payload
+---
+ (data -- (data -- fields)) ++ { (recordID : recordId) if(!isEmpty(recordId))}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="sync-case-db-flow" doc:id="d673ecb9-ebb1-4084-a4f0-b2126512289a" name="sync-case-db-flow"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f2b6a5e4-b6d6-4e1c-a89f-af1962f1f158" message="#[output application/json --- payload]"/>
+	</flow>
+</mule>
