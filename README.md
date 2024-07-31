@@ -182,4 +182,3 @@ This flow listens for changes in Supabase and updates Salesforce.
 - [Salesforce Connector Documentation](https://docs.mulesoft.com/connectors/salesforce/)
 - [Supabase Documentation](https://supabase.com/docs/)
 - [MuleSoft Anypoint Studio Documentation](https://docs.mulesoft.com/studio/)
-```
