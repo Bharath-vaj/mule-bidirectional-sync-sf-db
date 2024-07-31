@@ -1,6 +1,4 @@
-Sure, I'll move the MuleSoft flows section to before the deployment instructions. Here is the revised `README.md` file:
 
-```markdown
 # Bidirectional Sync: Salesforce and Supabase
 
 ## Overview
