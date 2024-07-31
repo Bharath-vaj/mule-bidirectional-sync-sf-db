@@ -1,4 +1,3 @@
-
 # Bidirectional Sync: Salesforce to Database
 
 ## Overview
