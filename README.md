@@ -1,3 +1,6 @@
+Sure, I'll move the MuleSoft flows section to before the deployment instructions. Here is the revised `README.md` file:
+
+```markdown
 # Bidirectional Sync: Salesforce and Supabase
 
 ## Overview
@@ -8,13 +11,13 @@ This project contains a Mule application designed to synchronize data between Sa
 
 The project is organized into the following main components:
 
-### 1. Salesforce Connector
+### 1. Salesforce Integration
 
-The Salesforce connector facilitates interactions with Salesforce's custom objects. This includes retrieving, updating, and creating records in Salesforce.
+This component facilitates interactions with Salesforce's custom objects. It includes operations for retrieving, updating, and creating records in Salesforce.
 
-### 2. Supabase Connector
+### 2. Supabase Integration
 
-The Supabase connector enables operations on the Supabase database. This includes retrieving, updating, and creating records in the Supabase database.
+This component enables operations on the Supabase database, including retrieving, updating, and creating records.
 
 ### 3. Sync Flows
 
@@ -50,19 +53,15 @@ The sync flows handle the logic for bidirectional synchronization. These flows l
 
    **Salesforce:**
 
-   - **Create a Connected App:**
+   - **Obtain Salesforce Access Token:**
      - Log in to Salesforce.
-     - Go to `Setup` > `App Manager` > `New Connected App`.
-     - Fill in the required fields. For API access, ensure that you enable OAuth settings and select the necessary OAuth scopes.
-     - Save the connected app and note the `Consumer Key` and `Consumer Secret`.
+     - Navigate to `Setup` and search for `API` to find details on accessing Salesforce APIs.
+     - Use Salesforce’s OAuth 2.0 credentials (Consumer Key and Consumer Secret) to obtain an access token using Postman or a similar tool.
 
-   - **Obtain Access Token:**
-     - Use the `Consumer Key` and `Consumer Secret` to obtain an access token. You can use tools like Postman to obtain this token via the OAuth 2.0 flow.
-
-   - **Configure the Salesforce Connector in MuleSoft:**
+   - **Configure Salesforce in MuleSoft:**
      - Open Anypoint Studio.
      - Go to the `Global Elements` tab.
-     - Add a new `Salesforce` configuration with the obtained `Consumer Key`, `Consumer Secret`, and `Access Token`.
+     - Add a new `Salesforce` configuration with the obtained `Access Token`.
 
    **Supabase:**
 
@@ -75,15 +74,59 @@ The sync flows handle the logic for bidirectional synchronization. These flows l
      - Go to the `Settings` > `API` section of your Supabase project.
      - Note the `Supabase URL` and `API Key`.
 
-   - **Configure the Supabase Connector in MuleSoft:**
+   - **Configure Supabase in MuleSoft:**
      - Open Anypoint Studio.
      - Go to the `Global Elements` tab.
-     - Add a new `Supabase` configuration with the obtained `Supabase URL` and `API Key`.
+     - Add a new `Database Connector` configuration with the obtained `Supabase URL` and `API Key`.
 
 4. **Open the Project in Anypoint Studio (Optional):**
 
    - Open Anypoint Studio.
    - Import the project as an existing Mule project by selecting `File` > `Import` > `Existing Mule Project`.
+
+## MuleSoft Flows
+
+### 1. Salesforce to Supabase Sync Flow
+
+This flow listens for changes in Salesforce and updates the Supabase database.
+
+**Flow Steps:**
+
+1. **Salesforce Trigger:**
+   - Use the Salesforce Connector to poll for new or updated records in Salesforce.
+
+2. **Data Transformation:**
+   - Transform the Salesforce data into the format required by Supabase.
+
+3. **Supabase Upsert:**
+   - Use the Database Connector to perform insert or update operations in Supabase.
+
+**Example Flow Configuration:**
+
+- **Trigger:** Salesforce connector configured to poll for changes.
+- **Transformation:** Map Salesforce fields to Supabase schema.
+- **Action:** Database Connector configured to upsert records in Supabase.
+
+### 2. Supabase to Salesforce Sync Flow
+
+This flow listens for changes in Supabase and updates Salesforce.
+
+**Flow Steps:**
+
+1. **Supabase Trigger:**
+   - Use the Database Connector to poll for new or updated records in Supabase.
+
+2. **Data Transformation:**
+   - Transform the Supabase data into the format required by Salesforce.
+
+3. **Salesforce Upsert:**
+   - Use the Salesforce Connector to perform insert or update operations in Salesforce.
+
+**Example Flow Configuration:**
+
+- **Trigger:** Database Connector configured to detect changes in Supabase.
+- **Transformation:** Map Supabase fields to Salesforce schema.
+- **Action:** Salesforce Connector configured to upsert records in Salesforce.
 
 ## Deployment
 
@@ -115,44 +158,6 @@ The sync flows handle the logic for bidirectional synchronization. These flows l
    - Go to `Runtime Manager`.
    - Click on `Deploy Application` and follow the instructions to upload the packaged application.
 
-## MuleSoft Flows
-
-### 1. Salesforce to Supabase Sync Flow
-
-This flow listens for changes in Salesforce and updates the Supabase database.
-
-**Flow Steps:**
-
-1. **Salesforce Trigger:**
-   - Use a Salesforce Connector to listen for new or updated records in the custom objects.
-
-2. **Data Transformation:**
-   - Use DataWeave to transform the Salesforce data into the format required by Supabase.
-
-3. **Supabase Upsert:**
-   - Use the Database Connector to insert or update records in the Supabase database.
-
-**Example Flow Configuration:**
-
-- **Trigger:** Salesforce connector configured to poll for changes.
-- **Transformation:** DataWeave script to map Salesforce fields to Supabase schema.
-- **Action:** Supabase connector configured to perform upsert operations.
-
-### 2. Supabase to Salesforce Sync Flow
-
-This flow listens for changes in Supabase and updates Salesforce.
-
-**Flow Steps:**
-
-1. **Supabase Trigger:**
-   - Use a Database Connector to listen for new or updated records in the database.
-
-2. **Data Transformation:**
-   - Use DataWeave to transform the Supabase data into the format required by Salesforce.
-
-3. **Salesforce Upsert:**
-   - Use the Salesforce Connector to insert or update records in Salesforce.
-
 ## Contributing
 
 1. **Fork the Repository.**
@@ -179,6 +184,6 @@ This flow listens for changes in Supabase and updates Salesforce.
 
 ## Additional Documentation
 
-- [Salesforce Connector Documentation](https://docs.mulesoft.com/connectors/salesforce/)
+- [Salesforce Documentation](https://developer.salesforce.com/docs)
 - [Supabase Documentation](https://supabase.com/docs/)
 - [MuleSoft Anypoint Studio Documentation](https://docs.mulesoft.com/studio/)
