@@ -43,6 +43,12 @@ Uses Database Connectors to perform CRUD operations on the database. This compon
 
 Handles the logic for translating OData requests into database operations and vice versa. This includes setting up CRUD operations for database tables using the database connectors.
 
+### 4. Salesforce External Objects
+
+- **Create External Objects:** In Salesforce, create external objects to link to your database tables via OData.
+- **Configure External Data Source:** Set up an external data source in Salesforce to connect with the OData service.
+- **Map External Objects:** Link database tables to Salesforce as external objects to enable seamless data integration and access.
+
 ## Setup
 
 ### Prerequisites
