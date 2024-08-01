@@ -1,8 +1,9 @@
-# Bidirectional Sync: Salesforce to Database
+# samToolbox
+# Sync Salesforce and Database Process API
 
 ## Overview
 
-This project contains a Mule application designed to synchronize data between Salesforce and a Supabase database. The application supports bidirectional synchronization, ensuring that data changes in either Salesforce or Supabase are reflected in the other system.
+This project contains a Mule application designed to synchronize data between Salesforce and a MySql database. The application supports bidirectional real time synchronization, ensuring that data changes in either Salesforce or Supabase are reflected in the other system.
 
 ## Project Structure
 
@@ -12,13 +13,41 @@ The project is organized into the following main components:
 
 This component facilitates interactions with Salesforce's custom objects. It includes operations for retrieving, updating, and creating records in Salesforce.
 
-### 2. Supabase Integration
+### 2. Supabase MySql Integration
 
 This component enables operations on the Supabase database, including retrieving, updating, and creating records.
 
 ### 3. Sync Flows
 
 The sync flows handle the logic for bidirectional synchronization. These flows listen for changes in either Salesforce or Supabase and propagate those changes to the other system.
+
+# Salesforce OData Integration
+
+## Overview
+
+Integrate Salesforce with an OData service using OData 2.0. This setup enables querying and manipulating Salesforce data in a standardized manner, facilitating efficient data exchange and interoperability between Salesforce and other systems that support OData 2.0.
+
+## Project Structure
+
+The project is organized into the following main components:
+
+### 1. OData Integration
+
+Configures the MuleSoft application with the OData 2.0 plugin to connect to an OData service. This setup enables interaction with the Salesforce API using OData 2.0 protocols.
+
+### 2. Database Integration
+
+Uses Database Connectors to perform CRUD operations on the database. This component manages the interactions with the database, allowing for data manipulation based on requests from Salesforce.
+
+### 3. OData Flows
+
+Handles the logic for translating OData requests into database operations and vice versa. This includes setting up CRUD operations for database tables using the database connectors.
+
+### 4. Salesforce External Objects
+
+- **Create External Objects:** In Salesforce, create external objects to link to your database tables via OData.
+- **Configure External Data Source:** Set up an external data source in Salesforce to connect with the OData service.
+- **Map External Objects:** Link database tables to Salesforce as external objects to enable seamless data integration and access.
 
 ## Setup
 
@@ -30,6 +59,7 @@ The sync flows handle the logic for bidirectional synchronization. These flows l
 - Anypoint Studio
 - Supabase account
 - Salesforce account with custom objects
+- Odata 2.0 Plugin
 
 ### Installation
 
@@ -184,3 +214,4 @@ This flow listens for changes in Supabase and updates Salesforce.
 - [Salesforce Documentation](https://developer.salesforce.com/docs)
 - [Supabase Documentation](https://supabase.com/docs/)
 - [MuleSoft Anypoint Studio Documentation](https://docs.mulesoft.com/studio/)
+- [OData 2.0 Documentation](https://docs.mulesoft.com/apikit/latest/install-odatav2-tooling)
