@@ -1,6 +1,3 @@
-Sure, here is the updated `README.md` file with the requested changes:
-
-```markdown
 # samToolbox
 # Sync Salesforce and Database Process API
 
