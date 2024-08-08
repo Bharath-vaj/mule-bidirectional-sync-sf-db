@@ -211,7 +211,7 @@ To overcome the limitation of the built-in components not displaying external ob
 
 1. **Ensure Mule Runtime is Installed and Configured:**
 
-   - Download and install Mule Runtime from the [MuleSoft website](https://www.mulesoft.com/platform/mule-esb).
+   - Download and install Mule Runtime from the [MuleSoft website](https://docs.mulesoft.com/general/).
 
 2. **Deploy the Application Using Anypoint Studio:**
 
@@ -234,7 +234,7 @@ To overcome the limitation of the built-in components not displaying external ob
 
 2. **Deploy the Packaged Application to CloudHub:**
 
-   - Log in to [Anypoint Platform](https://docs.mulesoft.com/general/).
+   - Log in to [Anypoint Platform](https://anypoint.mulesoft.com/login/).
    - Go to Runtime Manager.
    - Click on Deploy Application and follow the instructions to upload the packaged application.
 
