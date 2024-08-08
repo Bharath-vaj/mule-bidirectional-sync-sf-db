@@ -231,7 +231,7 @@ To overcome the limitation of the built-in components not displaying external ob
    ```bash
    mvn clean package
    ```
-
+   
 2. **Deploy the Packaged Application to CloudHub:**
 
    - Log in to [Anypoint Platform](https://anypoint.mulesoft.com/login/).
