@@ -234,7 +234,7 @@ To overcome the limitation of the built-in components not displaying external ob
 
 2. **Deploy the Packaged Application to CloudHub:**
 
-   - Log in to [Anypoint Platform](https://anypoint.mulesoft.com).
+   - Log in to [Anypoint Platform](https://docs.mulesoft.com/general/).
    - Go to Runtime Manager.
    - Click on Deploy Application and follow the instructions to upload the packaged application.
 
