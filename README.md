@@ -1,9 +1,12 @@
+Sure, here is the updated `README.md` file with the requested changes:
+
+```markdown
 # samToolbox
 # Sync Salesforce and Database Process API
 
 ## Overview
 
-This project contains a Mule application designed to synchronize data between Salesforce and a MySql database. The application supports bidirectional real time synchronization, ensuring that data changes in either Salesforce or Supabase are reflected in the other system.
+This project contains a Mule application designed to synchronize data between Salesforce and a MySql database. The application supports bidirectional real-time synchronization, ensuring that data changes in either Salesforce or Supabase are reflected in the other system.
 
 ## Project Structure
 
@@ -59,7 +62,7 @@ Handles the logic for translating OData requests into database operations and vi
 - Anypoint Studio
 - Supabase account
 - Salesforce account with custom objects
-- Odata 2.0 Plugin
+- OData 2.0 Plugin
 
 ### Installation
 
@@ -82,13 +85,13 @@ Handles the logic for translating OData requests into database operations and vi
 
    - **Obtain Salesforce Access Token:**
      - Log in to Salesforce.
-     - Navigate to `Setup` and search for `API` to find details on accessing Salesforce APIs.
+     - Navigate to Setup and search for API to find details on accessing Salesforce APIs.
      - Use Salesforce’s OAuth 2.0 credentials (Consumer Key and Consumer Secret) to obtain an access token using Postman or a similar tool.
 
    - **Configure Salesforce in MuleSoft:**
      - Open Anypoint Studio.
-     - Go to the `Global Elements` tab.
-     - Add a new `Salesforce` configuration with the obtained `Access Token`.
+     - Go to the Global Elements tab.
+     - Add a new Salesforce configuration with the obtained Access Token.
 
    **Supabase:**
 
@@ -98,18 +101,18 @@ Handles the logic for translating OData requests into database operations and vi
      - Set up your database schema as required.
 
    - **Obtain Supabase URL and API Key:**
-     - Go to the `Settings` > `API` section of your Supabase project.
-     - Note the `Supabase URL` and `API Key`.
+     - Go to the Settings > API section of your Supabase project.
+     - Note the Supabase URL and API Key.
 
    - **Configure Supabase in MuleSoft:**
      - Open Anypoint Studio.
-     - Go to the `Global Elements` tab.
-     - Add a new `Database Connector` configuration with the obtained `Supabase URL` and `API Key`.
+     - Go to the Global Elements tab.
+     - Add a new Database Connector configuration with the obtained Supabase URL and API Key.
 
 4. **Open the Project in Anypoint Studio (Optional):**
 
    - Open Anypoint Studio.
-   - Import the project as an existing Mule project by selecting `File` > `Import` > `Existing Mule Project`.
+   - Import the project as an existing Mule project by selecting File > Import > Existing Mule Project.
 
 ## MuleSoft Flows
 
@@ -155,16 +158,64 @@ This flow listens for changes in Supabase and updates Salesforce.
 - **Transformation:** Map Supabase fields to Salesforce schema.
 - **Action:** Salesforce Connector configured to upsert records in Salesforce.
 
+# Salesforce Lightning App Builder
+
+## Overview
+
+The project also includes a Salesforce Lightning App Builder configuration to view fields from custom objects and external objects on a record page. This enables a consolidated view of data directly within Salesforce.
+
+## Project Structure
+
+The project is organized into the following main components:
+
+### 1. Record Page Configuration
+
+The record page is set up to display fields from the custom objects and the external object using built-in components from the record page component palette. The record page can be found under `Setup` -> `User Interface` -> `Lightning App Builder`.
+
+### 2. Custom Lightning Component
+
+To overcome the limitation of the built-in components not displaying external object fields, a Custom Lightning Component was created using the Aura framework in the Salesforce Developer Console.
+
+#### Custom Lightning Component Files:
+
+- `ExternalObjectController.cmp`
+- `ExternalObjectControllerController.js`
+- `ExternalObjectControllerHelper.css`
+- `ExternalObjectController.css`
+- `ExternalObjectController.auradoc`
+- `ExternalObjectControllerRenderer.js`
+- `ExternalObjectController.design`
+- `ExternalObjectController.svg`
+
+### Setup
+
+1. **Create the Record Page:**
+
+   - Log in to Salesforce.
+   - Navigate to the Lightning App Builder under `Setup` -> `User Interface`.
+   - Create a new Record Page.
+   - Add components to display fields from the custom objects.
+
+2. **Add the Custom Lightning Component:**
+
+   - Open the Salesforce Developer Console.
+   - Create a new Lightning Component using the Aura framework.
+   - Add the necessary code to display the fields from the external object.
+   - Save and deploy the component.
+   - Add the Custom Lightning Component to the record page in the Lightning App Builder.
+
 ## Deployment
 
 ### Local Deployment
 
 1. **Ensure Mule Runtime is Installed and Configured:**
+
    - Download and install Mule Runtime from the [MuleSoft website](https://www.mulesoft.com/platform/mule-esb).
 
 2. **Deploy the Application Using Anypoint Studio:**
+
    - Right-click on the project in Anypoint Studio.
-   - Select `Run As` > `Mule Application`.
+   - Select Run As > Mule Application.
 
    **Alternatively, deploy via command line:**
 
@@ -181,9 +232,10 @@ This flow listens for changes in Supabase and updates Salesforce.
    ```
 
 2. **Deploy the Packaged Application to CloudHub:**
+
    - Log in to [Anypoint Platform](https://anypoint.mulesoft.com).
-   - Go to `Runtime Manager`.
-   - Click on `Deploy Application` and follow the instructions to upload the packaged application.
+   - Go to Runtime Manager.
+   - Click on Deploy Application and follow the instructions to upload the packaged application.
 
 ## Contributing
 
@@ -215,3 +267,5 @@ This flow listens for changes in Supabase and updates Salesforce.
 - [Supabase Documentation](https://supabase.com/docs/)
 - [MuleSoft Anypoint Studio Documentation](https://docs.mulesoft.com/studio/)
 - [OData 2.0 Documentation](https://docs.mulesoft.com/apikit/latest/install-odatav2-tooling)
+- [Salesforce Lightning App Builder](https://trailhead.salesforce.com/content/learn/modules/lightning_app_builder)
+- [Custom Lightning Components](https://developer.salesforce.com/docs/atlas.en-us.224.0.lightning.meta/lightning/intro_framework.htm)
