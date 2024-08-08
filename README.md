@@ -173,16 +173,20 @@ The record page is set up to display fields from the custom objects and the exte
 
 To overcome the limitation of the built-in components not displaying external object fields, a Custom Lightning Component was created using the Aura framework in the Salesforce Developer Console.
 
-#### Custom Lightning Component Files:
+#### Apex Class File:
 
-- `ExternalObjectController.cmp`
-- `ExternalObjectControllerController.js`
-- `ExternalObjectControllerHelper.css`
-- `ExternalObjectController.css`
-- `ExternalObjectController.auradoc`
-- `ExternalObjectControllerRenderer.js`
-- `ExternalObjectController.design`
-- `ExternalObjectController.svg`
+- `CustomObject.apxc`
+
+#### Custom Lightning Component Bundle Files:
+
+- `CustomObject.cmp`
+- `CustomObjectController.js`
+- `CustomObjectHelper.js`
+- `CustomObject.css`
+- `CustomObject.auradoc`
+- `CustomObjectRenderer.js`
+- `CustomObject.design`
+- `CustomObject.svg`
 
 ### Setup
 
