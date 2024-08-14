@@ -299,3 +299,5 @@ Indirect Lookup is a feature that allows you to link external object records wit
 - [OData 2.0 Documentation](https://docs.mulesoft.com/apikit/latest/install-odatav2-tooling)
 - [Salesforce Lightning App Builder](https://trailhead.salesforce.com/content/learn/modules/lightning_app_builder)
 - [Custom Lightning Components](https://developer.salesforce.com/docs/atlas.en-us.224.0.lightning.meta/lightning/intro_framework.htm)
+- [Salesforce Flow Builder](https://trailhead.salesforce.com/content/learn/trails/build-flows-with-flow-builder)
+- [Salesforce Indirect Lookup](https://trailhead.salesforce.com/content/learn/projects/quickstart-lightning-connect/quickstart-lightning-connect3)
