@@ -188,7 +188,7 @@ Custom Lightning Components offer maximum customization by allowing you to creat
    - Add components to display fields from the custom objects.
 
 2. **Add the Custom Lightning Component:**
-   - Open the Salesforce Developer Console.
+   - Open the Salesforce `Developer Console`.
    - Create a new Lightning Component using the Aura framework.
    - Add the necessary code to display the fields from the external object.
    - Save and deploy the component.
